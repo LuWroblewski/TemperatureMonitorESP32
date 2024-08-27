@@ -3,62 +3,111 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <DHT.h>
-#include "display.h"
-#include "sensor.h"
 
-String command = "";
-unsigned long lastTime = 0;
-const unsigned long interval = 60000; // 60 seconds
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-float temperature = 0.0;
-float humidity = 0.0;
+#define DHTPIN 4
+#define DHTTYPE DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
+
+String ordem = "";
+unsigned long ultimoTempo = 0;
+const unsigned long intervalo = 60000; // 60 seconds
+
+float temperatura = 0.0;
+float umidade = 0.0;
 
 void setup()
 {
     Serial.begin(9600);
-    setupDisplay();
-    setupSensor();
+    pinMode(2, OUTPUT);
+    dht.begin();
+
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+    {
+        Serial.println(F("SSD1306 allocation failed"));
+        for (;;)
+            ;
+    }
+
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.print("Iniciando...");
+    display.display();
+    delay(2000);
 }
 
 void loop()
 {
     if (Serial.available() > 0)
     {
-        command = Serial.readString();
-        command.trim();
+        ordem = Serial.readString();
+        ordem.trim();
     }
 
-    unsigned long currentTime = millis();
-    unsigned long timeRemaining = interval - (currentTime - lastTime);
-    unsigned long secondsRemaining = timeRemaining / 1000;
+    unsigned long tempoAtual = millis();
+    unsigned long tempoRestante = intervalo - (tempoAtual - ultimoTempo);
+    unsigned long segundosRestantes = tempoRestante / 1000;
 
     digitalWrite(2, HIGH);
 
-    if (command.equals("temperatura") || (currentTime - lastTime >= interval))
+    if (ordem.equals("temperatura") || (tempoAtual - ultimoTempo >= intervalo))
     {
         digitalWrite(2, LOW);
 
-        temperature = readTemperature();
-        humidity = readHumidity();
+        temperatura = dht.readTemperature();
+        umidade = dht.readHumidity();
 
-        if (isnan(temperature) || isnan(humidity))
+        if (isnan(temperatura) || isnan(umidade))
         {
-            Serial.println("Failed to read from DHT22 sensor");
+            Serial.println("Falha ao ler do sensor DHT22");
         }
         else
         {
-            Serial.print("Temperature ");
-            Serial.print(temperature);
+            Serial.print("Temperatura ");
+            Serial.print(temperatura);
             Serial.println("\xF8C");
 
-            Serial.print("Humidity ");
-            Serial.print(humidity);
+            Serial.print("Umidade ");
+            Serial.print(umidade);
 
-            lastTime = currentTime;
+            ultimoTempo = tempoAtual;
         }
 
-        command = "";
+        ordem = "";
     }
 
-    updateDisplay(temperature, humidity, secondsRemaining);
+    display.clearDisplay();
+    display.setTextSize(1);
+
+    display.setCursor(0, 0);
+    display.print("Temperatura ");
+    display.setCursor(0, 8);
+    display.print("em Celsius ");
+
+    display.setCursor(70, 0);
+    display.print("Umidade ");
+    display.setCursor(70, 8);
+    display.print("em % ");
+
+    display.setTextSize(2);
+    display.setCursor(0, 17);
+    display.print(temperatura);
+
+    display.setCursor(65, 17);
+    display.print(umidade);
+
+    display.setTextSize(1);
+    display.setCursor(0, 50);
+    display.print("Prox. verif.: ");
+    display.print(segundosRestantes);
+    display.println(" seg");
+
+    display.display();
 }
