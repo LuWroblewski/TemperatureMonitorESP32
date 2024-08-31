@@ -1,6 +1,7 @@
 # TemperatureMonitorESP32
 
 Uses an ESP32 to monitor temperature and humidity in the room, all datas stored in database.
+Automatically, the temperature and humidity are refreshed every minute. However, if you send a command via the serial monitor, the data will refresh immediately as well.
 
 If you are using Arduino IDE you need change to other branch "CodeOneFolder", IDE don't support multiples files.
 
