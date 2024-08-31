@@ -5,6 +5,8 @@
 #include <DHT.h>
 #include "display.h"
 #include "sensor.h"
+#include "wificonnect.h"
+#include "apiRequest.h"
 
 String command = "";
 unsigned long lastTime = 0;
@@ -18,6 +20,7 @@ void setup()
     Serial.begin(9600);
     setupDisplay();
     setupSensor();
+    setupWiFi();
 }
 
 void loop()
@@ -56,6 +59,7 @@ void loop()
 
             lastTime = currentTime;
         }
+        sendDataToServer(temperature, humidity);
 
         command = "";
     }
