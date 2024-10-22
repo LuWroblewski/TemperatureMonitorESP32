@@ -6,11 +6,12 @@
 #include "display.h"
 #include "sensor.h"
 #include "wificonnect.h"
-#include "apiRequest.h"
+#include "apirequest.h"
+#include "relaycontrol.h"
 
 String command = "";
 unsigned long lastTime = 0;
-const unsigned long interval = 60000; // 60 seconds
+const unsigned long interval = 60000; // 60 segundos
 
 float temperature = 0.0;
 float humidity = 0.0;
@@ -21,6 +22,7 @@ void setup()
     setupDisplay();
     setupSensor();
     setupWiFi();
+    setupRelay();
 }
 
 void loop()
@@ -35,11 +37,9 @@ void loop()
     unsigned long timeRemaining = interval - (currentTime - lastTime);
     unsigned long secondsRemaining = timeRemaining / 1000;
 
-    digitalWrite(2, HIGH);
-
     if (command.equals("temperatura") || (currentTime - lastTime >= interval))
     {
-        digitalWrite(2, LOW);
+        activateRelay();
 
         temperature = readTemperature();
         humidity = readHumidity();

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
-#include "apiRequest.h"
+#include "apirequest.h"
 
 void sendDataToServer(float temperature, float humidity)
 {
